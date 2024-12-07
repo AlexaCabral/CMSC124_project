@@ -18,7 +18,9 @@ def openFile():
     else:
         file_name.set("(None) - Open a File")
 
-
+def execute():
+    for item in lexemes_treeview.get_children():
+        lexemes_treeview.delete(item)
 
 # Main Window
 root = tk.Tk()
@@ -104,7 +106,7 @@ for identifier, value in dummy_data_symbol:
     symbol_treeview.insert("", "end", values=(identifier, value))
     
 # Execution/Run Button - Console
-execute_button = ttk.Button(root, text="Execute", style="Accent.TButton")
+execute_button = ttk.Button(root, text="Execute", style="Accent.TButton", command=execute)
 execute_button.grid(row=3, column=0, padx=5, pady=5, sticky="nsew", columnspan=3)
 
 console = scrolledtext.ScrolledText(root, height=20, font=("Helvetica", 12), fg='white', bg="#404040")
