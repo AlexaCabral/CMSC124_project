@@ -61,7 +61,14 @@ keywords = {
     r'^I IZ .+$': 'Function Call',
     r'^MKAY$': 'Concatenation Delimiter',
     r'^NOOB$': 'Void Literal',
-    r'^AN$': 'Parameter Delimiter'
+    r'^AN$': 'Parameter Delimiter',
+    
+    r'^(NUMBR|NUMBAR|YARN|TROOF|NOOB)$': 'Data Type Literal',
+    r'^(WIN|FAIL)$': 'TROOF Literal',
+    r'^[a-zA-Z][a-zA-Z0-9_]*$': 'Identifier',
+    r'^-?(0|[1-9][0-9]*)?\.[0-9]+$': 'NUMBAR Literal',
+    r'^-?0|-?[1-9][0-9]*$': 'NUMBR Literal',
+    r'^".*"$': 'YARN Literal'
 }
 
 class Lexer:
