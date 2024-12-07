@@ -1,22 +1,29 @@
 import tkinter as tk
 from tkinter import ttk
-from tkinter import filedialog, ttk
+from tkinter import filedialog, ttk, scrolledtext
 import os
 
-def file_directory_description():
+def openFile():
     file_path = filedialog.askopenfilename()
     if file_path:
-        file_name = os.path.basename(file_path)
-        file_directory_btn.set(file_name)
+        base_name = os.path.basename(file_path)
+        file_name.set(base_name)
+        
+        file = open(file_path, "r")
+        content = file.read()
+        text_editor.delete("1.0", "end")
+        text_editor.insert("1.0", content)
+    
+        file.close()
     else:
-        file_directory_btn.set("(None)")
+        file_name.set("(None) - Open a File")
 
 
 
 # Main Window
 root = tk.Tk()
 root.title("LOLCode Interpreter - CMSC 124 Project")
-root.geometry("1920x1080+0+0")
+root.geometry("1920x1080+-5+0")
 root.option_add("*tearOff", False)
 
 # Style
@@ -28,17 +35,12 @@ root.tk.call("source", r"C:\Users\asus\Desktop\UP\3rd Year 1st Sem\CMSC 124\proj
 style.theme_use("forest-dark")
 
 
-# Open file button
-file_directory_btn = tk.StringVar(value="(None)")
-input_file_btn = tk.Button(
-    root, 
-    textvariable=file_directory_btn, 
-    command=file_directory_description,
-    bd=1, 
-    relief="ridge"
-)
-input_file_btn.grid(row=0, column=0, padx=5, pady=5, sticky="NSEW")
-        
-        
+# File Explorer - Text Editor
+file_name = tk.StringVar(value="(None) - Open a File")
+file_explorer_button = ttk.Button(root, textvariable=file_name, command=openFile, style="Accent.TButton")
+file_explorer_button.grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
+
+text_editor = scrolledtext.ScrolledText(root, width=75, height=25, fg='white', bg="#404040")
+text_editor.grid(row=1, column=0, padx=5, pady=5, rowspan=2, sticky="nsew")
 
 root.mainloop()
