@@ -102,6 +102,12 @@ for keyword, classification in dummy_data:
     
 for identifier, value in dummy_data_symbol:
     symbol_treeview.insert("", "end", values=(identifier, value))
+    
+# Execution/Run Button - Console
+execute_button = ttk.Button(root, text="Execute", style="Accent.TButton")
+execute_button.grid(row=3, column=0, padx=5, pady=5, sticky="nsew", columnspan=3)
 
+console = scrolledtext.ScrolledText(root, height=20, font=("Helvetica", 12), fg='white', bg="#404040")
+console.grid(row=4, column=0, padx=5, pady=5, sticky="nsew", columnspan=3)
 
 root.mainloop()
