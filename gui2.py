@@ -13,6 +13,9 @@ def openFile():
         base_name = os.path.basename(file_path)
         file_name.set(base_name)
 
+        # Clear the console before opening a new file
+        console.delete("1.0", "end")
+
         with open(file_path, "r") as file:
             content = file.read()
             text_editor.delete("1.0", "end")
