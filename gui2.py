@@ -34,14 +34,17 @@ def execute():
         lexemes = interpreter.get_lexemes()
         variables = interpreter.get_variables()
 
+        # Clear the previous lexemes and symbol table
         for item in lexemes_treeview.get_children():
             lexemes_treeview.delete(item)
         for item in symbol_treeview.get_children():
             symbol_treeview.delete(item)
 
+        # Display the lexemes in the TreeView
         for lexeme, classification in lexemes:
             lexemes_treeview.insert("", "end", values=(lexeme, classification))
 
+        # Display the variables in the Symbol Table
         for var, value in variables.items():
             symbol_treeview.insert("", "end", values=(var, value))
     else:
@@ -94,7 +97,6 @@ symbol_treeview.column(2, anchor="w", width=220)
 symbol_treeview.heading("#0", text="", anchor="w")
 symbol_treeview.heading(1, text=" Identifier", anchor="w")
 symbol_treeview.heading(2, text=" Value", anchor="w")
-
 
 execute_button = ttk.Button(root, text="Execute", style="Accent.TButton", command=execute)
 execute_button.grid(row=3, column=0, padx=5, pady=5, sticky="nsew", columnspan=3)

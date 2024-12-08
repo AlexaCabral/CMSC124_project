@@ -94,6 +94,7 @@ class Interpreter:
                     self.lexemes.append((keyword, "Output Keyword"))
                     self.lexemes.append((variable, "Variable Identifier"))
 
+
                     return
 
                 if keyword == "BTW":
