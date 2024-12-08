@@ -39,7 +39,7 @@ class Interpreter:
             "OBTW": r"^OBTW$",
             "TLDR": r"^TLDR$",
             "I HAS A": r"^I HAS A (\w+)(?: ITZ (.+))?$",
-            "VISIBLE": r"^VISIBLE (\w+)(?: (.+))?$",
+            "VISIBLE": r"^VISIBLE ((.|\w)+)(?: (.+))?$",
             "GIMMEH": r"^GIMMEH (.+)$",
             "O RLY?": r"^O RLY\?$",
             "YA RLY": r"^YA RLY$",
@@ -76,33 +76,34 @@ class Interpreter:
                         self.lexemes.append((keyword, "Variable Declaration"))
                         self.lexemes.append(("ITZ", "Variable Initialization"))
                         self.lexemes.append((variable, "Variable Identifier"))
-
-
                     else:
-                        self.variables[variable] = "NOOB"
+                        variable_value = "NOOB"
+                        self.variables[variable] = variable_value
                         self.lexemes.append((keyword, "Variable Declaration"))
                         self.lexemes.append((variable, "Variable Identifier"))
-
                         return
 
                 if keyword == "VISIBLE":
                     variable = match.group(1).strip()
                     variable_pattern = r'^[A-Za-z]+[0-9A-Za-z_]*$'
 
+                    if variable.startswith('"') and variable.endswith('"'):
+                        self.add_to_console(variable[1:-1])
+                    elif variable in self.variables:
+                        self.add_to_console(str(self.variables[variable]))
+                    elif variable not in self.variables:
+                            self.add_to_console("NOOB")
+                    
                     if not re.match(variable_pattern, variable):
                         return f"Error: Invalid variable '{variable}'."
                     self.lexemes.append((keyword, "Output Keyword"))
                     self.lexemes.append((variable, "Variable Identifier"))
-
-
                     return
 
                 if keyword == "BTW":
                     value = ' '.join(tokens[1:])
                     self.lexemes.append((keyword, "Comment Keyword"))
                     self.lexemes.append((value, "Comment Line"))
-
-
                     return
 
                 if keyword == "GIMMEH":
@@ -156,7 +157,6 @@ class Interpreter:
 
                     value = {compare1} == {compare2}
                     self.lexemes.append((keyword, "Comparison Identifier"))
-
 
         return None
 
