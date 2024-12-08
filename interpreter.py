@@ -35,7 +35,7 @@ class Interpreter:
             "KTHXBYE": r"^KTHXBYE$",
             "WAZZUP": r"^WAZZUP$",
             "BUHBYE": r"^BUHBYE$",
-            "BTW": r"^BTW.$",
+            "BTW": r"^BTW (.*)$",
             "OBTW": r"^OBTW$",
             "TLDR": r"^TLDR$",
             "I HAS A": r"^I HAS A (\w+)(?: ITZ (.+))?$",
@@ -73,10 +73,16 @@ class Interpreter:
                     variable_value = match.group(2)
                     if variable_value:
                         self.variables[variable] = variable_value
-                        self.lexemes.append((keyword, "Variable Declaration and Initialization"))
+                        self.lexemes.append((keyword, "Variable Declaration"))
+                        self.lexemes.append(("ITZ", "Variable Initialization"))
+                        self.lexemes.append((variable, "Variable Identifier"))
+
+
                     else:
                         self.variables[variable] = "NOOB"
-                        self.lexemes.append((keyword, "Variable Declaration and Initialization"))
+                        self.lexemes.append((keyword, "Variable Declaration"))
+                        self.lexemes.append((variable, "Variable Identifier"))
+
                         return
 
                 if keyword == "VISIBLE":
@@ -86,11 +92,16 @@ class Interpreter:
                     if not re.match(variable_pattern, variable):
                         return f"Error: Invalid variable '{variable}'."
                     self.lexemes.append((keyword, "Output Keyword"))
+                    self.lexemes.append((variable, "Variable Identifier"))
+
                     return
 
                 if keyword == "BTW":
-                    value = {' '.join(tokens[1:])}
+                    value = ' '.join(tokens[1:])
                     self.lexemes.append((keyword, "Comment Keyword"))
+                    self.lexemes.append((value, "Comment Line"))
+
+
                     return
 
                 if keyword == "GIMMEH":
@@ -101,6 +112,8 @@ class Interpreter:
                         return f"Error: Invalid variable '{variable}'."
 
                     self.lexemes.append((keyword, "Input Keyword"))
+                    self.lexemes.append((variable, "Variable Identifier"))
+
                 if keyword == "HAI":
                     self.lexemes.append((keyword, "Start of Program"))
 
