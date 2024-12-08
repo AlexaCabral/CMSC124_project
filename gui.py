@@ -27,10 +27,24 @@ def execute():
 
     code_file = text_editor.get("1.0", "end").strip()  # Remove extra newlines at the end
     lexeme_table = []
+    comment = False
+    comment_block = []
     
     for line in code_file.splitlines():
         if line.strip():
-            lexeme_table.extend(lexemes.evaluate([line]))
+            if line.strip() == "OBTW" and not comment:
+                lexeme_table.extend([["OBTW", "Comment Delimiter"]])
+                comment = True
+            elif line.strip() == "TLDR" and comment:
+                lexeme_table.extend([[" ".join(comment_block), "Comment"]])
+                print(" ".join(comment_block))
+                lexeme_table.extend([["TLDR", "Comment Delimiter"]])
+                comment = False
+            elif line.strip() != "OBTW" and comment:
+                print(line.strip())
+                comment_block.append(line.strip())
+            else:
+                lexeme_table.extend(lexemes.evaluate([line]))
     
     for lexeme in lexeme_table:
         lexemes_treeview.insert("", "end", values=(lexeme[0], lexeme[1]))

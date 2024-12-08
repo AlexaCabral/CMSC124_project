@@ -62,8 +62,10 @@ keywords = {
     r'^MKAY$': 'Concatenation Delimiter',
     r'^NOOB$': 'Void Literal',
     r'^AN$': 'Parameter Delimiter',
+    r'^\+$': 'Output Delimiter',
     
     r'^".*"$': 'YARN Literal',
+    r'\s*\"[^\"]*\"\s*': 'YARN Literal',
     r'^(NUMBR|NUMBAR|YARN|TROOF|NOOB)$': 'Data Type Literal',
     r'^(WIN|FAIL)$': 'TROOF Literal',
     r'^[a-zA-Z][a-zA-Z0-9_]*$': 'Variable Identifier',
@@ -77,35 +79,18 @@ def classify_token(token):
     for pattern, label in compiled_keywords:
         if pattern.match(token):
             return label
-    return "Literal"
+    return None
 
 def evaluate(lines):
     result = []
-    multiline_comment = False
-    multiline_comment_content = []
-
     for line in lines:
         stripped_line = line.strip()
-        if multiline_comment:
-            if re.match(r"^TLDR$", stripped_line):
-                result.append(["OBTW", "Comment Delimiter"])
-                result.append([" ".join(multiline_comment_content), "Comment"])
-                result.append(["TLDR", "Comment Delimiter"])
-                multiline_comment = False
-                multiline_comment_content = []
-            else:
-                multiline_comment_content.append(stripped_line)
-            continue
-
-        if re.match(r"^OBTW$", stripped_line):
-            multiline_comment = True
-            continue
 
         while stripped_line:
             # Match multi-word and single-word keywords
-            match = re.search(r"\b(" + "|".join(keywords.keys()).replace("^", "").replace("$", "") + r")\b", stripped_line)
+            match = re.search(r'"[^"]*"|\b(' + "|".join(keywords.keys()).replace("^", "").replace("$", "") + r")\b", stripped_line)
+
             if match:
-                # Capture everything before the match as separate tokens (if exists)
                 prefix = stripped_line[:match.start()].strip()
                 if prefix:
                     prefix_tokens = re.findall(r'\S+', prefix)
@@ -114,39 +99,8 @@ def evaluate(lines):
                 # Add the matched keyword
                 token = match.group(0)
                 token_class = classify_token(token)
-                
-                if token == "I HAS A":
-                    # Handle variable declaration with declaration
-                    rest = stripped_line[match.end():].strip()
-                    var_match = re.match(r'^([a-zA-Z][a-zA-Z0-9_]*)', rest) # variable
-                    
-                    if var_match and (literal := rest[len(var_match.group(0)):].strip()).startswith("ITZ"):
-                        variable = var_match.group(0)
-                        result.append([token, token_class])
-                        result.append([variable, "Variable Identifier"])
-                        result.append(["ITZ", "Variable Assignment"])
-                        
-                        # Handle the literal if YARN literal or another data type
-                        literal_value = literal[3:].strip()
-                        if literal_value.startswith('"') and literal_value.endswith('"'):
-                            result.append([literal_value.strip('"'), "YARN Literal"])
-                        else:
-                            result.append([literal_value, classify_token(literal_value)])
-                        
-                        stripped_line = ""
-                        break
-                    elif var_match:
-                        result.append([token, token_class])
-                        result.append([var_match.group(0), "Variable Identifier"])
-                        break
-                        
-
-                elif token == "VISIBLE" and re.match(r'^".*"$', stripped_line[match.end():].strip()):
-                    # Capture the rest of the line as the YARN literal if it matches
-                    result.append([token, token_class])
-                    result.append([stripped_line[match.end():].strip().strip('"'), "YARN Literal"])
-                    break
-                elif token == "BTW":
+            
+                if token == "BTW":
                     comment = stripped_line[match.end():].strip()
                     if comment:
                         result.append([token, token_class])
