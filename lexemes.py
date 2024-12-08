@@ -135,6 +135,11 @@ def evaluate(lines):
                         
                         stripped_line = ""
                         break
+                    elif var_match:
+                        result.append([token, token_class])
+                        result.append([var_match.group(0), "Variable Identifier"])
+                        break
+                        
 
                 elif token == "VISIBLE" and re.match(r'^".*"$', stripped_line[match.end():].strip()):
                     # Capture the rest of the line as the YARN literal if it matches
