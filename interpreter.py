@@ -5,10 +5,9 @@ class Interpreter:
         self.console = console
         self.variables = {}
         self.comment_block = False
-        self.lexemes = []  # List to store lexemes and classifications
+        self.lexemes = []  
 
     def add_to_console(self, message):
-        """Helper function to append text to the console."""
         self.console.insert("end", message + "\n")
         self.console.yview("end")
 
@@ -167,7 +166,7 @@ class Interpreter:
                 self.extract(line)
 
     def get_lexemes(self):
-        return self.lexemes  # Now this will return the list of lexemes and their classifications
+        return self.lexemes  
 
     def get_variables(self):
         return self.variables
