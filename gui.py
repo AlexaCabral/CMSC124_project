@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog, ttk, scrolledtext
 import os
+import lexemes
 
 def openFile():
     file_path = filedialog.askopenfilename()
@@ -21,6 +22,18 @@ def openFile():
 def execute():
     for item in lexemes_treeview.get_children():
         lexemes_treeview.delete(item)
+    
+    console.delete("1.0", "end")
+
+    code_file = text_editor.get("1.0", "end").strip()  # Remove extra newlines at the end
+    lexeme_table = []
+    
+    for line in code_file.splitlines():
+        if line.strip():
+            lexeme_table.extend(lexemes.evaluate([line]))
+    
+    for lexeme in lexeme_table:
+        lexemes_treeview.insert("", "end", values=(lexeme[0], lexeme[1]))
 
 # Main Window
 root = tk.Tk()
@@ -78,32 +91,6 @@ symbol_treeview.column(2, anchor="w", width=220)
 symbol_treeview.heading("#0", text="", anchor="w")
 symbol_treeview.heading(1, text=" Identifier", anchor="w")
 symbol_treeview.heading(2, text=" Value", anchor="w")
-
-
-# Dummy data to visualize treeview
-dummy_data = [
-    ("HAI", "Code Delimiter"),
-    ("KTHXBYE", "End of Program"),
-    ("VISIBLE", "Output Statement"),
-    ("GIMMEH", "Input Statement"),
-    ("I HAS A", "Variable Declaration"),
-    ("ITZ", "Variable Initialization"),
-    ("SUM OF", "Addition Operation"),
-    ("DIFF OF", "Subtraction Operation"),
-    ("PRODUKT OF", "Multiplication Operation"),
-    ("QUOSHUNT OF", "Division Operation"),
-]
-
-dummy_data_symbol = [
-    ("IT", "noot noot 12"),
-    ("var", "12"),
-]
-
-for keyword, classification in dummy_data:
-    lexemes_treeview.insert("", "end", values=(keyword, classification))
-    
-for identifier, value in dummy_data_symbol:
-    symbol_treeview.insert("", "end", values=(identifier, value))
     
 # Execution/Run Button - Console
 execute_button = ttk.Button(root, text="Execute", style="Accent.TButton", command=execute)

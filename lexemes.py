@@ -114,8 +114,29 @@ def evaluate(lines):
                 # Add the matched keyword
                 token = match.group(0)
                 token_class = classify_token(token)
+                
+                if token == "I HAS A":
+                    # Handle variable declaration with declaration
+                    rest = stripped_line[match.end():].strip()
+                    var_match = re.match(r'^([a-zA-Z][a-zA-Z0-9_]*)', rest) # variable
+                    
+                    if var_match and (literal := rest[len(var_match.group(0)):].strip()).startswith("ITZ"):
+                        variable = var_match.group(0)
+                        result.append([token, token_class])
+                        result.append([variable, "Variable Identifier"])
+                        result.append(["ITZ", "Variable Assignment"])
+                        
+                        # Handle the literal if YARN literal or another data type
+                        literal_value = literal[3:].strip()
+                        if literal_value.startswith('"') and literal_value.endswith('"'):
+                            result.append([literal_value.strip('"'), "YARN Literal"])
+                        else:
+                            result.append([literal_value, classify_token(literal_value)])
+                        
+                        stripped_line = ""
+                        break
 
-                if token == "VISIBLE" and re.match(r'^".*"$', stripped_line[match.end():].strip()):
+                elif token == "VISIBLE" and re.match(r'^".*"$', stripped_line[match.end():].strip()):
                     # Capture the rest of the line as the YARN literal if it matches
                     result.append([token, token_class])
                     result.append([stripped_line[match.end():].strip().strip('"'), "YARN Literal"])
@@ -140,17 +161,4 @@ def evaluate(lines):
 
     # Save lexemes
     lexemes_list.extend([Lexemes(keyword=token[0], value=token[1]) for token in result])
-    print(result)  # Debugging output to verify tokens
     return result
-
-def open_file():
-    root = tk.Tk()
-    root.withdraw()
-    file_path = filedialog.askopenfilename(title="Select a file")
-    if file_path:
-        with open(file_path, 'r') as file:
-            lines = file.readlines()
-            evaluate(lines)
-
-
-open_file()
