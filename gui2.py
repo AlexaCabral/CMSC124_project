@@ -56,7 +56,7 @@ root.geometry("1920x1080+-5+0")
 root.option_add("*tearOff", False)
 
 style = ttk.Style(root)
-
+    
 root.tk.call("source", r"C:\Users\denal\Desktop\codes\CMSC 124\CMSC124_project\Forest-ttk-theme\forest-dark.tcl")
 style.theme_use("forest-dark")
 
