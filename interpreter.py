@@ -86,12 +86,15 @@ class Interpreter:
                 if keyword == "VISIBLE":
                     variable = match.group(1).strip()
                     variable_pattern = r'^[A-Za-z]+[0-9A-Za-z_]*$'
+                    var = match.group(1)
+
 
                     if variable.startswith('"') and variable.endswith('"'):
                         self.add_to_console(variable[1:-1])
-                    elif variable in self.variables:
+                        self.lexemes.append((variable, "Literal"))
+                    elif (variable or var) in self.variables:
                         self.add_to_console(str(self.variables[variable]))
-                    elif variable not in self.variables:
+                    elif var in self.variables :
                             self.add_to_console("NOOB")
                     
                     if not re.match(variable_pattern, variable):
