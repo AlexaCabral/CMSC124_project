@@ -15,6 +15,7 @@ class Interpreter:
         token_pattern = r'"[^"]*"|\S+|[.]'  
         tokens = re.findall(token_pattern, line.strip())
 
+        # Replace complex tokens like "SUM OF" and similar with underscores to simplify tokenization
         complex_tokens = ['SUM OF', 'PRODUKT OF', 'BIGGR OF', 'DIFF OF', 'QUOSHUNT OF']
         
         for complex_token in complex_tokens:
@@ -25,6 +26,43 @@ class Interpreter:
         tokens = [token.replace("_", " ") for token in tokens]
         
         return tokens
+
+    def evaluate_expression(self, expr):
+        """Evaluate a simple arithmetic expression, substituting variables."""
+        try:
+            # Replace variable names with their values
+            for var, value in self.variables.items():
+                expr = expr.replace(var, str(value))
+
+            # Handle operations (SUM OF, PRODUKT OF, DIFF OF, QUOSHUNT OF, BIGGR OF)
+            expr = self.evaluate_operations(expr)
+
+            # Evaluate the expression (now with substituted variables and operators)
+            result = eval(expr)
+            return result
+        except ZeroDivisionError:
+            return "Error: Division by zero."
+        except Exception as e:
+            return f"Error: Invalid expression - {str(e)}"
+
+    def evaluate_operations(self, expr):
+        """Evaluate LOLCODE specific operations."""
+        # Handle "SUM OF" -> "+"
+        expr = re.sub(r"SUM OF (\S+) AN (\S+)", r"(\1 + \2)", expr)
+
+        # Handle "PRODUKT OF" -> "*"
+        expr = re.sub(r"PRODUKT OF (\S+) AN (\S+)", r"(\1 * \2)", expr)
+
+        # Handle "DIFF OF" -> "-"
+        expr = re.sub(r"DIFF OF (\S+) AN (\S+)", r"(\1 - \2)", expr)
+
+        # Handle "QUOSHUNT OF" -> "/"
+        expr = re.sub(r"QUOSHUNT OF (\S+) AN (\S+)", r"(\1 / \2)", expr)
+
+        # Handle "BIGGR OF" -> "max()"
+        expr = re.sub(r"BIGGR OF (\S+) AN (\S+)", r"max(\1, \2)", expr)
+
+        return expr
 
     def parser(self, tokens):
         if not tokens:
@@ -70,35 +108,30 @@ class Interpreter:
             if match:
                 if keyword == "I HAS A":
                     variable = match.group(1)
-                    variable_value = match.group(2)
-                    if variable_value:
-                        self.variables[variable] = variable_value
-                        self.lexemes.append((keyword, "Variable Declaration"))
-                        self.lexemes.append(("ITZ", "Variable Initialization"))
-                        self.lexemes.append((variable, "Variable Identifier"))
-                    else:
-                        variable_value = "NOOB"
-                        self.variables[variable] = variable_value
-                        self.lexemes.append((keyword, "Variable Declaration"))
-                        self.lexemes.append((variable, "Variable Identifier"))
-                        return
+                    variable_value = match.group(2) if match.group(2) else "NOOB"
+                    self.variables[variable] = variable_value
+                    self.lexemes.append((keyword, "Variable Declaration"))
+                    self.lexemes.append(("ITZ", "Variable Initialization"))
+                    self.lexemes.append((variable, "Variable Identifier"))
+                    return
 
                 if keyword == "VISIBLE":
                     variable = match.group(1).strip()
                     variable_pattern = r'^[A-Za-z]+[0-9A-Za-z_]*$'
-                    var = match.group(1)
 
+                    self.evaluate_expression(variable)
 
                     if variable.startswith('"') and variable.endswith('"'):
                         self.add_to_console(variable[1:-1])
                         self.lexemes.append((variable, "Literal"))
-                    elif (variable or var) in self.variables:
+                    elif variable in self.variables:
                         self.add_to_console(str(self.variables[variable]))
-                    elif var in self.variables :
-                            self.add_to_console("NOOB")
+                    elif variable.split()[0] in self.variables :
+                            self.add_to_console(self.variables[variable.split()[0]])
                     
                     if not re.match(variable_pattern, variable):
                         return f"Error: Invalid variable '{variable}'."
+                        break
                     self.lexemes.append((keyword, "Output Keyword"))
                     self.lexemes.append((variable, "Variable Identifier"))
                     return
