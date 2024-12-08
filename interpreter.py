@@ -1,64 +1,47 @@
 import re
-import tkinter as tk
-from tkinter import filedialog
-from pathlib import Path
+
 class Interpreter:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("")
-        self.file_path = filedialog.askopenfilename(title="Select a file")
+    def __init__(self, console):
+        self.console = console
         self.variables = {}
         self.comment_block = False
-        self.gui_widgets()
-                
-    def gui_widgets(self):
-        self.canvas = tk.Canvas(self.root, width=300, height=300, bg='white', borderwidth=0, highlightthickness=0, relief=tk.SOLID)
-        self.canvas.pack(side=tk.TOP, padx=(2,0), pady=(2,0))
-        self.mainloop()
-    
+        self.lexemes = []  # List to store lexemes and classifications
+
+    def add_to_console(self, message):
+        """Helper function to append text to the console."""
+        self.console.insert("end", message + "\n")
+        self.console.yview("end")
+
     def tokenize(self, line):
-        token_pattern = r'"[^"]*"|\S+'
+        token_pattern = r'"[^"]*"|\S+|[.]'  
         tokens = re.findall(token_pattern, line.strip())
+
+        complex_tokens = ['SUM OF', 'PRODUKT OF', 'BIGGR OF', 'DIFF OF', 'QUOSHUNT OF']
+        
+        for complex_token in complex_tokens:
+            line = line.replace(complex_token, complex_token.replace(" ", "_"))
+        
+        tokens = re.findall(token_pattern, line.strip())
+
+        tokens = [token.replace("_", " ") for token in tokens]
+        
         return tokens
 
-    def extract_value(self, val):
-        pass
-    
     def parser(self, tokens):
         if not tokens:
             return None
-        
+
         keywords = {
             "HAI": r"^HAI$",
             "KTHXBYE": r"^KTHXBYE$",
             "WAZZUP": r"^WAZZUP$",
             "BUHBYE": r"^BUHBYE$",
-            "BTW": r"^BTW.*$",
-            "OBTW": r"^OBTW.*$",
+            "BTW": r"^BTW.$",
+            "OBTW": r"^OBTW$",
             "TLDR": r"^TLDR$",
             "I HAS A": r"^I HAS A (\w+)(?: ITZ (.+))?$",
-            "R": r"^R$",
-            "SUM OF": r"^SUM OF$",
-            "DIFF OF": r"^DIFF OF$",
-            "PRODUKT OF": r"^PRODUKT OF$",
-            "QUOSHUNT OF": r"^QUOSHUNT OF$",
-            "MOD OF": r"^MOD OF$",
-            "BIGGR OF": r"^BIGGR OF$",
-            "SMALLR OF": r"^SMALLR OF$",
-            "BOTH OF": r"^BOTH OF$",
-            "EITHER OF": r"^EITHER OF$",
-            "WON OF": r"^WON OF$",
-            "NOT": r"^NOT$",
-            "ANY OF": r"^ANY OF$",
-            "ALL OF": r"^ALL OF$",
-            "BOTH SAEM": r"^BOTH SAEM$",
-            "DIFFRINT": r"^DIFFRINT$",
-            "SMOOSH": r"^SMOOSH$",
-            "MAEK": r"^MAEK$",
-            "A": r"^A$",
-            "IS NOW A": r"^IS NOW A$",
-            "VISIBLE": r"^VISIBLE (.+)$",
-            "GIMMEH": r"^GIMMEH$",
+            "VISIBLE": r"^VISIBLE (\w+)(?: (.+))?$",
+            "GIMMEH": r"^GIMMEH (.+)$",
             "O RLY?": r"^O RLY\?$",
             "YA RLY": r"^YA RLY$",
             "MEBBE": r"^MEBBE$",
@@ -66,7 +49,6 @@ class Interpreter:
             "OIC": r"^OIC$",
             "WTF?": r"^WTF\?$",
             "OMG": r"^OMG$",
-            "OMGWTF": r"^OMGWTF$",
             "IM IN YR": r"^IM IN YR$",
             "UPPIN": r"^UPPIN$",
             "NERFIN": r"^NERFIN$",
@@ -80,70 +62,112 @@ class Interpreter:
             "FOUND YR": r"^FOUND YR$",
             "I IZ": r"^I IZ$",
             "MKAY": r"^MKAY$",
-            "AN": r"^AN$"
+            "AN": r"^AN$",
+            "BOTH SAEM": r"^BOTH SAEM (\w+)(?: AN (.+))?$"
         }
-        # ============== Match keywords condition ==============
-        
+
         for keyword, pattern in keywords.items():
             match = re.match(pattern, ' '.join(tokens))
             if match:
-                
                 if keyword == "I HAS A":
                     variable = match.group(1)
                     variable_value = match.group(2)
                     if variable_value:
                         self.variables[variable] = variable_value
-                        return(f"Lexeme: {keyword}, Variable: {variable}, Lexeme: ITZ, Value: {self.variables[variable]}")
+                        self.lexemes.append((keyword, "Variable Declaration and Initialization"))
                     else:
                         self.variables[variable] = "NOOB"
-                        return(f"Lexeme: {keyword}, Variable: {variable}, Value: {self.variables[variable]}")
+                        self.lexemes.append((keyword, "Variable Declaration and Initialization"))
+                        return
 
                 if keyword == "VISIBLE":
-                    value = match.group(1).strip()
-                    if value in self.variables:
-                        return f"Lexeme: VISIBLE, Output: {self.variables[value]}"
-                    else:
-                        return f"Lexeme: VISIBLE, Output: {value.strip('\"')}"
-                elif keyword == "BTW":
-                    return f"Lexeme: {keyword}, Comment: {' '.join(tokens[1:])}"
-                elif keyword == "HAI":
-                    return f"Lexeme: {keyword}"
-                elif keyword == "END":
-                    return f"Lexeme: {keyword}"
-                else:
-                    return f"Lexeme: {keyword}"
-        
-        return None
-        
-    def extract(self, line):
-        # if "BTW" in line:
-        #     line = line.split("BTW", 1)[0].strip()
-        # Ignore BTW comment
+                    variable = match.group(1).strip()
+                    variable_pattern = r'^[A-Za-z]+[0-9A-Za-z_]*$'
 
+                    if not re.match(variable_pattern, variable):
+                        return f"Error: Invalid variable '{variable}'."
+                    self.lexemes.append((keyword, "Output Keyword"))
+                    return
+
+                if keyword == "BTW":
+                    value = {' '.join(tokens[1:])}
+                    self.lexemes.append((keyword, "Comment Keyword"))
+                    return
+
+                if keyword == "GIMMEH":
+                    variable = match.group(1).strip()
+                    variable_pattern = r'^[A-Za-z]+[0-9A-Za-z_]*$'
+
+                    if not re.match(variable_pattern, variable):
+                        return f"Error: Invalid variable '{variable}'."
+
+                    self.lexemes.append((keyword, "Input Keyword"))
+                if keyword == "HAI":
+                    self.lexemes.append((keyword, "Start of Program"))
+
+                if keyword == "KTHXBYE":
+                    self.lexemes.append((keyword, "End of Program"))
+
+                if keyword == "BUHBYE":
+                    self.lexemes.append((keyword, "End of Variable Declaration"))
+
+                if keyword == "WAZZUP":
+                    self.lexemes.append((keyword, "Start of Variable Declaration"))
+
+                if keyword == "O RLY?":
+                    self.lexemes.append((keyword, "Start of Conditional Identifier"))
+
+                if keyword == "YA RLY?":
+                    self.lexemes.append((keyword, "Conditional If Identifier"))
+
+                if keyword == "NO WAI":
+                    self.lexemes.append((keyword, "Conditional Else Identifier"))
+
+                if keyword == "MEBBE":
+                    value = {' '.join(tokens[1:])}
+                    self.lexemes.append((keyword, "Conditional Else-If Identifier"))
+
+                if keyword == "OIC":
+                    self.lexemes.append((keyword, "End of Conditional Declaration"))
+
+                if keyword == "BOTH SAEM":
+                    compare1 = match.group(1)
+                    compare2 = match.group(2)
+
+                    variable_pattern = r'^([A-Za-z]+[0-9A-Za-z_]*)|[0-9]+$'
+
+                    if not re.match(variable_pattern, compare1):
+                        return f"Error: Invalid variable or literal '{compare1}'."
+                    if not re.match(variable_pattern, compare2):
+                        return f"Error: Invalid variable or literal '{compare2}'."
+
+                    value = {compare1} == {compare2}
+                    self.lexemes.append((keyword, "Comparison Identifier"))
+
+
+        return None
+
+    def extract(self, line):
         if line == "OBTW":
             self.comment_block = True
             return
-        
+
         if self.comment_block:
             if line == "TLDR":
                 self.comment_block = False
             return
-        
+
         tokens = self.tokenize(line)
         parsed = self.parser(tokens)
-        
-        if parsed:
-            print(parsed)
 
+    def process_code(self, code_lines):
+        for line in code_lines:
+            line = line.strip()
+            if line:
+                self.extract(line)
 
-    def mainloop(self):
-        with open(self.file_path, 'r') as file:
-            for line in file:
-                line = line.strip()
-                if line:
-                    self.extract(line)
-                
+    def get_lexemes(self):
+        return self.lexemes  # Now this will return the list of lexemes and their classifications
 
-root = tk.Tk()
-app = Interpreter(root)
-root.mainloop()
+    def get_variables(self):
+        return self.variables
